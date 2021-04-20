@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<project name="AntLab">
+
+    <property name="src.dir"     value="src/main"/>
+    <property name="build.dir"   value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.dir"     value="${build.dir}/jar"/>
+    <property name="main-class"  value="main.java.Main"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac destdir="${classes.dir}" includeantruntime="false">
+            <classpath>
+                <pathelement location="lib/junit-4.13.jar"/>
+                <pathelement location="lib/hamcrest-core-1.3.jar"/>
+            </classpath>
+            <src path="${src.dir}"/>
+        </javac>
+    </target>
+    <target name="build" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+            </manifest>
+        </jar>
+    </target>
+    <target name="test" depends="build">
+        <junit printsummary="yes">
+            <classpath location="lib/junit-4.13.jar"/>
+            <classpath location="lib/hamcrest-core-1.3.jar"/>
+
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+            </classpath>
+            <test name="main.test.SayerTest"/>
+        </junit>
+    </target>
+    <target name="scp" depends="build">
+    </target>
+</project>
