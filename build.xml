@@ -6,6 +6,8 @@
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.dir"     value="${build.dir}/jar"/>
     <property name="main-class"  value="main.java.Main"/>
+    <property name="jar.file"    value="${jar.dir}/${ant.project.name}.jar"/>
+    <property file="Application.properties"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
@@ -22,11 +24,11 @@
     </target>
     <target name="build" depends="compile">
         <mkdir dir="${jar.dir}"/>
-        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${main-class}"/>
-            </manifest>
-        </jar>
+        <jar destfile="${jar.file}" basedir="${classes.dir}" manifest="MANIFEST.MF"/>
+<!--            <manifest>-->
+<!--                <attribute name="Main-Class" value="${main-class}"/>-->
+<!--            </manifest>-->
+<!--        </jar>-->
     </target>
     <target name="test" depends="build">
         <junit printsummary="yes">
@@ -40,5 +42,92 @@
         </junit>
     </target>
     <target name="scp" depends="build">
+        <scp file="${jar.file}" todir="s285583@se.ifmo.ru:/home/s285583" port="2222" password="${password}"/>
+    </target>
+    <target name="doc" depends="build">
+        <manifest file="MANIFEST.MF">
+            <attribute name="Main-Class" value="${main-class}"/>
+        </manifest>
+
+        <checksum file="${src.dir}/java/Main.java" property="Main-MD5"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="Main.java">
+                <attribute name="MD5-Digest" value="${Main-MD5}"/>
+            </section>
+        </manifest>
+        <checksum file="${src.dir}/java/Sayer.java" property="Sayer-MD5"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="Sayer.java">
+                <attribute name="MD5-Digest" value="${Sayer-MD5}"/>
+            </section>
+        </manifest>
+        <checksum file="${src.dir}/test/SayerTest.java" property="Test-MD5"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="SayerTest.java">
+                <attribute name="MD5-Digest" value="${Test-MD5}"/>
+            </section>
+        </manifest>
+
+        <checksum file="${src.dir}/java/Main.java" algorithm="SHA-1" property="Main-sha1"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="Main.java">
+                <attribute name="SHA-Digest" value="${Main-sha1}"/>
+            </section>
+        </manifest>
+        <checksum file="${src.dir}/java/Sayer.java" algorithm="SHA-1" property="Sayer-sha1"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="Sayer.java">
+                <attribute name="SHA-Digest" value="${Sayer-sha1}"/>
+            </section>
+        </manifest>
+        <checksum file="${src.dir}/test/SayerTest.java" algorithm="SHA-1" property="Test-sha1"/>
+        <manifest file="MANIFEST.MF" mode="update">
+            <section name="SayerTest.java">
+                <attribute name="SHA-Digest" value="${Test-sha1}"/>
+            </section>
+        </manifest>
+<!--            <fileset dir="."  >-->
+<!--                <include name="src/main/**/*.java"/>-->
+<!--            </fileset>-->
+<!--        </checksum>-->
+<!--        <echo file="MANIFEST.MF" append="true" message="md5: "/>-->
+<!--        <concat destfile="MANIFEST.MF" append="true">-->
+<!--            <fileset dir="md5files/src/main/">-->
+<!--                <include name="**/*.MD5"/>-->
+<!--            </fileset>-->
+<!--        </concat>-->
+<!--        <checksum todir="sha-1" algorithm="SHA-1">-->
+<!--            <fileset dir="."  >-->
+<!--                <include name="src/main/**/*.java"/>-->
+<!--            </fileset>-->
+<!--        </checksum>-->
+<!--        <concat destfile="MANIFEST.MF" append="true">-->
+<!--            <fileset dir="sha-1/src/main/">-->
+<!--                <include name="**/*.SHA-1"/>-->
+<!--            </fileset>-->
+<!--        </concat>-->
+<!--        <delete dir="md5files"/>-->
+<!--        <delete dir="sha-1"/>-->
+
+        <javadoc destdir="build/docs" >
+            <classpath location="lib/junit-4.13.jar"/>
+            <classpath location="lib/hamcrest-core-1.3.jar"/>
+            <fileset dir=".">
+                <include name="src/main/**/*.java"/>
+            </fileset>
+        </javadoc>
+    </target>
+    <target name="env" depends="build">
+        <exec executable="cmd">
+            <arg value="/c"/>
+            <arg value="${java} ${args} -jar ${jar.file}"/>
+        </exec>
+    </target>
+    <target name="alt">
+        <replace dir="${src.dir}" token="${oldpropertyname}" value="${propertyname}"/>
+        <replace file="Application.properties" token="${oldpropertyname}" value="${propertyname}"/>
+        <antcall target="build">
+            <param name="jar.file" value="${jar.dir}/${jarname}.jar"/>
+        </antcall>
     </target>
 </project>
